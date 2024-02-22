@@ -48,7 +48,7 @@
         transition: background-color 0.3s ease;
     }
 
-    .btn-custom:hover, .btn-custom:active, .btn-custom:after {
+    .btn-custom:hover, .btn-custom:active, .btn-custom:after, .btn-custom:active:focus {
          background-color: #503630;
          border: none;
     }
@@ -62,7 +62,7 @@
 {
     <div class="col text-center" style="margin-left: 33%; margin-right: 33%">
         <div class="row text-center">
-            <h1 class="display-5 font-raleway " style="font-weight:bold; margin-top: 10%; margin-bottom:4%; color:#503630; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5)">Izračunaj svoj BMI</h1>
+            <h1 class="display-5 font-raleway " style="font-weight:bold; margin-top: 2%; margin-bottom:2%; color:#503630; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5)">Izračunaj svoj BMI</h1>
         </div>
         <div class="row text-center">
             <table class="table rounded">
@@ -97,19 +97,22 @@
         <div class="row text-center" style="margin-left:20%; margin-right:20%">
             <EditForm Model="userDetails" OnValidSubmit="SaveUserDetails" FormName="DetailsForm">
                 <DataAnnotationsValidator />
-                <ValidationSummary />
+                @* <ValidationSummary /> *@
 
                 <div class="form-group">
                     <label for="height">Visina:</label>
                     <InputNumber id="height" class="form-control" @bind-Value="userDetails.Height" />
+                    <ValidationMessage For="() => userDetails.Height" />
                 </div>
                 <div class="form-group">
                     <label for="weight">Težina:</label>
                     <InputNumber id="weight" class="form-control" @bind-Value="userDetails.Weight" />
+                    <ValidationMessage For="() => userDetails.Weight" />
                 </div>
                 <div class="form-group" style="margin-bottom: 20px">
                     <label for="years">Godine:</label>
                     <InputNumber id="years" class="form-control" @bind-Value="userDetails.Years" />
+                    <ValidationMessage For="() => userDetails.Years" />
                 </div>
                 <button type="submit" class="btn btn-primary btn-custom">Izračunaj</button>
 
@@ -125,7 +128,7 @@ else{
     <div style="margin-left: 16%; margin-right:16%">
         <EditForm Model="userDetails" OnValidSubmit="SaveUserDetails" FormName="DetailsForm">
             <DataAnnotationsValidator />
-            <ValidationSummary />
+            @* <ValidationSummary /> *@
 
             <div class="form-group">
                 <label for="name">Ime:</label>
@@ -138,14 +141,17 @@ else{
             <div class="form-group">
                 <label for="height">Visina:</label>
                 <InputNumber id="height" class="form-control" @bind-Value="userDetails.Height" />
+                <ValidationMessage For="() => userDetails.Height" />
             </div>
             <div class="form-group">
                 <label for="weight">Težina:</label>
                 <InputNumber id="weight" class="form-control" @bind-Value="userDetails.Weight" />
+                <ValidationMessage For="() => userDetails.Weight" />
             </div>
             <div class="form-group">
                 <label for="years">Godine:</label>
                 <InputNumber id="years" class="form-control" @bind-Value="userDetails.Years" />
+                <ValidationMessage For="() => userDetails.Years" />
             </div>
             <div class="form-group" style="margin-bottom: 20px">
                 <label for="sex">Spol:</label>
@@ -210,11 +216,12 @@ else{
         LoggedInUser.Details.Years = userDetails.Years;
         LoggedInUser.Details.Sex = userDetails.Sex;
 
-        NavManager.NavigateTo("/calculations");
+        NavManager.NavigateTo("/calculations/izracunaj");
     }
+
 
     private void NavigateToCalculations()
     {
-        NavManager.NavigateTo("/calculations");
+        NavManager.NavigateTo("/calculations/izracuni");
     }
 }

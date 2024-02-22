@@ -1,4 +1,4 @@
-﻿@page "/Calculations"
+﻿@page "/Calculations/{choice}"
 @* @layout MainLayout *@
 @using Nutrition.Models
 @using Nutrition.Services
@@ -11,13 +11,14 @@
         color: #ffff; 
         background-color:#CF4F59; 
         border-color: #503630; 
+        margin-left:8%;
         margin-top: 20px; 
         margin-bottom: 33px;
         cursor: pointer;
         transition: background-color 0.3s ease;
     }
 
-        .btn-custom:hover, .btn-custom:active, .btn-custom:after {
+        .btn-custom:hover, .btn-custom:active, .btn-custom:after, .btn-custom:active:focus {
             background-color: #503630;
             border: none;
         }
@@ -106,6 +107,9 @@
     private double bmr { get; set; }
     private bool isTableVisible { get; set; } = false;
 
+    [Parameter]
+    public string? choice { get; set; }
+
     private List<UserProgressDataModel>? progressData { get; set; }
 
     protected override void OnAfterRender(bool firstRender)
@@ -115,30 +119,46 @@
             var heightInMeters = LoggedInUser.Details.Height / 100;
             bmi = Math.Round(LoggedInUser.Details.Weight / (heightInMeters * heightInMeters), 2);
 
-            bmr = LoggedInUser.Details.Sex == Gender.Muško.ToString() ? 
+            bmr = LoggedInUser.Details.Sex == Gender.Muško.ToString() ?
                  (88.362 + (13.397 * LoggedInUser.Details.Weight) + (4.799 * LoggedInUser.Details.Height) - (5.677 * LoggedInUser.Details.Years)) * 1.55
                  : (447.593 + (9.247 * LoggedInUser.Details.Weight) + (3.098 * LoggedInUser.Details.Height) - (4.330 * LoggedInUser.Details.Years)) * 1.55;
 
             bmr = (int)bmr;
 
+            if (choice == "izracunaj")
+            {
 
-            var progress = new UserProgressDataModel()
-                {
-                    UserId = LoggedInUser.Id,
-                    Height = LoggedInUser.Details.Height,
-                    Weight = LoggedInUser.Details.Weight,
-                    BMI = bmi,
-                    Years = LoggedInUser.Details.Years,
-                    DateOfMeasures = DateTime.Now.Date               
-                };
 
-            UserProgress.AddUserProgressDataDetails(LoggedInUser.Id, progress);
+                var progress = new UserProgressDataModel()
+                    {
+                        UserId = LoggedInUser.Id,
+                        Height = LoggedInUser.Details.Height,
+                        Weight = LoggedInUser.Details.Weight,
+                        BMI = bmi,
+                        Years = LoggedInUser.Details.Years,
+                        DateOfMeasures = DateTime.Now.Date
+                    };
 
-            StateHasChanged();
+                UserProgress.AddUserProgressDataDetails(LoggedInUser.Id, progress);
 
-            firstRender = false;
+                StateHasChanged();
+
+                firstRender = false;
+
+                base.OnAfterRender(firstRender);
+            }
+            else if (choice == "izracuni")
+            {
+                UserProgress.GetUserProgressData(LoggedInUser.Id);
+
+                StateHasChanged();
+
+                firstRender = false;
+
+                base.OnAfterRender(firstRender);
+            }
         }
-        base.OnAfterRender(firstRender);
+        
     }
 
     // private void LogOff()

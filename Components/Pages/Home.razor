@@ -1,5 +1,6 @@
 ﻿@page "/"
 
+
 @rendermode InteractiveServer
 @using Nutrition.Models
 @using Nutrition.Services
@@ -28,6 +29,20 @@
         max-width: 85%;
         box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     }
+
+    .btn-custom {
+        color: #ffff;
+        background-color: #CF4F59;
+        border-color: #503630;
+        margin-top: 20px;
+        margin-bottom:0;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-custom:hover, .btn-custom:active, .btn-custom:after, .btn-custom:active:focus {
+            background-color: #503630;
+            border: none;
 </style>
 
 <div class="row">
@@ -45,7 +60,7 @@
         </h5>
         <img src="/Images/HomePage.png" class="image" />
     </div>
-    <div class="col-4 mr-5 " style="background-color:#E8828E; max-height: 450px; overflow-y: auto;">
+    <div class="col-4 mr-5 " style="background-color:#E8828E; max-height: 490px; overflow-y: auto;">
         
         @if (IsRegistered)
         {
@@ -60,7 +75,7 @@
                     <InputText id="password" type="password" class="form-control" @bind-Value="loginPassword" />
                 </div>
                 <div>
-                    <button type="submit" class="btn-accent mt-4">Prijava</button>
+                    <button type="submit" class="btn btn-primary btn-custom">Prijava</button>
                 </div>
             </EditForm>
             <p style="margin-top: 20px">
@@ -73,6 +88,7 @@
         {
             <h1 class="display-6 font-raleway">Registracija</h1>
             <EditForm Model="registrationModel" OnValidSubmit="Register" FormName="RegistrationForm">
+                <DataAnnotationsValidator />
                 <div>
                     <label for="userName">Korisničko ime:</label>
                     <InputText id="userName" class="form-control" @bind-Value="registrationModel.UserName" />
@@ -94,7 +110,7 @@
                     <ValidationMessage For="() => registrationModel.ConfirmPassword" />
                 </div>
                 <div>
-                    <button type="submit" class="btn-accent mt-4">Register</button>
+                    <button type="submit" class="btn btn-primary btn-custom">Register</button>
                 </div>
             </EditForm>
             <p>
