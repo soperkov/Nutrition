@@ -1,0 +1,162 @@
+﻿@page "/Calculations"
+@* @layout MainLayout *@
+@using Nutrition.Models
+@using Nutrition.Services
+@using Nutrition.Enums
+@rendermode InteractiveServer
+
+<style>
+    .btn-custom{
+
+        color: #ffff; 
+        background-color:#CF4F59; 
+        border-color: #503630; 
+        margin-top: 20px; 
+        margin-bottom: 33px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-custom:hover, .btn-custom:active, .btn-custom:after {
+            background-color: #503630;
+            border: none;
+        }
+
+</style>
+
+<div class="col text-center">
+    <div class="row text-center">
+        <h1 class="display-5 font-raleway " style="font-weight:bold; color:#503630; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5)">Izračun</h1>
+    </div>
+
+    <div class="row text-center">
+        @if (bmi > 30)
+        {
+            <h1>Vaš BMI je previsok!</h1>
+            <h4>Iznosi @bmi. Da biste to poboljšali, trebate ići u kalorijski deficit.<br /> Nemojte nikako prekoračiti dnevni unos od @bmr kcal.</h4>
+        } 
+        else if (bmi > 25)
+        {
+            <h1>Vaš BMI je visok!</h1>
+            <h4>Iznosi @bmi. Da biste to poboljšali, trebate ići u kalorijski deficit.<br /> Nemojte nikako prekoračiti dnevni unos od @bmr kcal.</h4>
+        }
+        else if (bmi > 18.5)
+        {
+            <h1>Vaš BMI je idealan!</h1>
+            <h4>Iznosi @bmi. Preporučeni dnevni unos za vas je @bmr kcal.</h4>
+        }
+        else
+        {
+            <h1>Vaš BMI je nizak!</h1>
+            <h4>Iznosi @bmi. Trebali biste konzumirati više od @bmr kcal dnevno. </h4>
+        }
+    </div>
+
+
+
+    @* <button type="submit" class="btn btn-primary" @onclick="LogOff">Odjava</button> *@
+    <button type="submit" class="btn btn-primary btn-custom" @onclick="ShowProgressTable">Prikaži povijest vaganja</button>
+    <button type="submit" class="btn btn-primary btn-custom" @onclick="NavigateToCalculation">Povratak na unos</button>
+
+
+    @if (isTableVisible && progressData is not null)
+    {
+        <div class="row text-center" style="margin-left: 3%; margin-right: 3%">
+            <table class="table" style="border: black solid 1px;">
+                <thead>
+                    <tr>
+                        <th>Ime</th>
+                        <th>Prezime</th>
+                        <th>Spol</th>
+                        <th>Godine</th>
+                        <th>Visina</th>
+                        <th>Težina</th>
+                        <th>BMI</th>
+                        <th>Datum vaganja</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var progress in progressData)
+                    {
+                        <tr>
+                            <td>@LoggedInUser.Details.Name</td>
+                            <td>@LoggedInUser.Details.LastName</td>
+                            <td>@LoggedInUser.Details.Sex</td>
+                            <td>@progress.Years</td>
+                            <td>@progress.Height</td>
+                            <td>@progress.Weight</td>
+                            <td>@progress.BMI</td>
+                            <td>@progress.DateOfMeasures.Day.@progress.DateOfMeasures.Month.@progress.DateOfMeasures.Year</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+
+    [Inject] private UserProgressDataService UserProgress { get; set; }
+    [Inject] private LoggedInUserModel LoggedInUser { get; set; }
+    [Inject] private NavigationManager NavManager { get; set; }
+    [Inject] private UserProgressDataService UserProgressDataService { get; set; }
+
+    private double bmi { get; set; }
+    private double bmr { get; set; }
+    private bool isTableVisible { get; set; } = false;
+
+    private List<UserProgressDataModel>? progressData { get; set; }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var heightInMeters = LoggedInUser.Details.Height / 100;
+            bmi = Math.Round(LoggedInUser.Details.Weight / (heightInMeters * heightInMeters), 2);
+
+            bmr = LoggedInUser.Details.Sex == Gender.Muško.ToString() ? 
+                 (88.362 + (13.397 * LoggedInUser.Details.Weight) + (4.799 * LoggedInUser.Details.Height) - (5.677 * LoggedInUser.Details.Years)) * 1.55
+                 : (447.593 + (9.247 * LoggedInUser.Details.Weight) + (3.098 * LoggedInUser.Details.Height) - (4.330 * LoggedInUser.Details.Years)) * 1.55;
+
+            bmr = (int)bmr;
+
+
+            var progress = new UserProgressDataModel()
+                {
+                    UserId = LoggedInUser.Id,
+                    Height = LoggedInUser.Details.Height,
+                    Weight = LoggedInUser.Details.Weight,
+                    BMI = bmi,
+                    Years = LoggedInUser.Details.Years,
+                    DateOfMeasures = DateTime.Now.Date               
+                };
+
+            UserProgress.AddUserProgressDataDetails(LoggedInUser.Id, progress);
+
+            StateHasChanged();
+
+            firstRender = false;
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+    // private void LogOff()
+    // {
+    //     if(isTableVisible) ShowProgressTable();
+    //     LoggedInUser.Reset();
+    //     NavManager.NavigateTo("/");
+    // }
+
+    private void ShowProgressTable()
+    {
+        progressData = UserProgressDataService.GetUserProgressData(LoggedInUser.Id);
+        isTableVisible = !isTableVisible;
+
+    }
+
+    private void NavigateToCalculation()
+    {
+        NavManager.NavigateTo("/CalculateNutrition");
+    }
+}

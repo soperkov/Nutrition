@@ -1,0 +1,206 @@
+﻿@page "/"
+
+@rendermode InteractiveServer
+@using Nutrition.Models
+@using Nutrition.Services
+
+<style>
+    .welcome-heading {
+        font-weight: bold;
+        margin-left: 10%;
+        margin-bottom: 4%;
+        color: #503630;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    h5 {
+        margin-top: 2%;
+        margin-right: 100px;
+        margin-left: 100px;
+        font-family: Century-Gothic;
+    }
+
+    .image {
+        margin-top: 5%;
+        margin-left: 8%;
+        width: 85%;
+        height: auto;
+        max-width: 85%;
+        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+</style>
+
+<div class="row">
+    <div class="col-8">
+        <h4 class="display-5 font-raleway welcome-heading">Dobrodošli u kalkulator računanja BMI-ja.</h4>
+       
+        <h5>
+            BMI - Indeks tjelesne mase (engl. Body Mass Index) je jedan od načina procjene uhranjenosti. Od svih poznatih indeksa, indeks tjelesne mase je najuže povezan s količinom prekomjernog masnog tkiva u ljudskom tijelu, a uz to ga je relativno jednostavno izračunati ili očitati iz tablica. Izračun BMI se temelji na odnosu tjelesne težine i kvadrata visine osobe.
+        </h5>
+        <h5>
+            Vrijednosti preporučenog BMI-a iste su za oba spola, on iznosi od 18,5 – 24,9 kg/m2 prema klasifikaciji Svjetske zdravstvene organizacije za europsko stanovništvo.
+        </h5>
+        <h5>
+            BMR (Basal Metabolic Rate) ili bazalni metabolizam je najmanja potrošnja energije koja je neophodna za održavanje vitalnih tjelesnih funkcija organizma odnosno normalno funkcioniranje srca, pluća, živčanog sustava, bubrega, jetre, probavnih organa, reproduktivnih organa, mišića i kože.
+        </h5>
+        <img src="/Images/HomePage.png" class="image" />
+    </div>
+    <div class="col-4 mr-5 " style="background-color:#E8828E; max-height: 450px; overflow-y: auto;">
+        
+        @if (IsRegistered)
+        {
+            <h1 class="display-6 font-raleway">Prijava</h1>
+            <EditForm Model="this" OnValidSubmit="LogIn" FormName="LoginForm">
+                <div>
+                    <label for="userName">Korisničko ime:</label>
+                    <InputText id="userName" class="form-control" @bind-Value="loginUsername" />
+                </div>
+                <div>
+                    <label for="password" class="mt-2">Lozinka:</label>
+                    <InputText id="password" type="password" class="form-control" @bind-Value="loginPassword" />
+                </div>
+                <div>
+                    <button type="submit" class="btn-accent mt-4">Prijava</button>
+                </div>
+            </EditForm>
+            <p style="margin-top: 20px">
+                Ukoliko nemate korisnički račun, <a href="#" style="color:#503630" @onclick='ToggleRegistration'>registrirajte se</a>.
+            </p>
+       
+
+        }
+        else
+        {
+            <h1 class="display-6 font-raleway">Registracija</h1>
+            <EditForm Model="registrationModel" OnValidSubmit="Register" FormName="RegistrationForm">
+                <div>
+                    <label for="userName">Korisničko ime:</label>
+                    <InputText id="userName" class="form-control" @bind-Value="registrationModel.UserName" />
+                    <ValidationMessage For="() => registrationModel.UserName" />
+                </div>
+                <div>
+                    <label for="email">Email:</label>
+                    <InputText id="email" type="email" class="form-control" @bind-Value="registrationModel.Email" />
+                    <ValidationMessage For="() => registrationModel.Email" />
+                </div>
+                <div>
+                    <label for="password" class="mt-2">Lozinka:</label>
+                    <InputText id="password" type="password" class="form-control" @bind-Value="registrationModel.Password" />
+                    <ValidationMessage For="() => registrationModel.Password" />
+                </div>
+                <div>
+                    <label for="passwordConfirm" class="mt-2">Ponovljena lozinka:</label>
+                    <InputText id="passwordConfirm" type="password" class="form-control" @bind-Value="registrationModel.ConfirmPassword" />
+                    <ValidationMessage For="() => registrationModel.ConfirmPassword" />
+                </div>
+                <div>
+                    <button type="submit" class="btn-accent mt-4">Register</button>
+                </div>
+            </EditForm>
+            <p>
+                <a href="#" style="color:#503630" @onclick='ToggleRegistration'>Povratak na prijavu</a>.
+            </p>
+        }
+        @if (IsErrorMessageVisible)
+        {
+            <div class="mt-4">
+                <p style="color:red">@ErrorMessage</p>
+            </div>
+        }
+    </div>
+</div>
+
+@* 
+@if (IsErrorMessageVisible)
+{
+    <div class="row">
+        <div class="col-8"></div>
+        <div class="col-4">
+            <p style="color:red">@ErrorMessage</p>
+        </div>
+    </div>
+} *@
+
+ 
+
+@code {
+    [Inject] private NavigationManager NavManager { get; set; }
+    [Inject] private LoggedInUserModel LoggedInUser { get; set; }
+    [Inject] private UserService userService { get; set; }
+
+    [SupplyParameterFromForm] private string loginUsername { get; set; }
+    [SupplyParameterFromForm] private string loginPassword { get; set; }
+
+    [SupplyParameterFromForm] private RegistrationModel registrationModel { get; set; } = new();
+
+
+    private bool IsErrorMessageVisible { get; set; }
+    private string ErrorMessage { get; set; }
+    private bool IsRegistered { get; set; } = true;
+
+    private void ToggleRegistration()
+    {
+        IsRegistered = !IsRegistered;
+        IsErrorMessageVisible = false;
+    }
+
+    private void LogIn()
+    {
+        try
+        {
+            var result = userService.Login(loginUsername, loginPassword);
+            if (result != null)
+            {
+                LoggedInUser.Id = result.Id;
+                NavManager.NavigateTo("/CalculateNutrition");
+            }
+            else
+            {
+                IsErrorMessageVisible = true;
+                ErrorMessage = "Korisničko ime ili lozinka nisu točni.";
+                loginUsername = "";
+                loginPassword = "";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
+            throw;
+        }
+    }
+
+    private void Register()
+    {
+        try
+        {
+            IsErrorMessageVisible = false;
+            ErrorMessage = "";
+
+            var result = userService.GetUser(registrationModel.UserName);
+            if (result is not null)
+            {
+                IsErrorMessageVisible = true;
+                ErrorMessage = "Korisničko ime već postoji!";
+                return;
+            }
+
+            var user = new UserModel
+                {
+                    UserName = registrationModel.UserName,
+                    Password = registrationModel.Password,
+                    Email = registrationModel.Email
+                };
+
+            userService.CreateUser(user);
+
+            loginUsername = registrationModel.UserName;
+            loginPassword = registrationModel.Password;
+            LogIn();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
+            throw;
+        }
+    }
+}

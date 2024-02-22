@@ -1,0 +1,220 @@
+﻿@page "/CalculateNutrition"
+@* @layout MainLayout *@
+@rendermode InteractiveServer
+
+@using Nutrition.Models
+@using Nutrition.Services
+@using Nutrition.Enums
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    tbody{
+        text-align:left;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    tr:hover {
+        background-color: #ddd;
+    }
+
+    table.rounded {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .btn-custom {
+        color: #ffff;
+        background-color: #CF4F59;
+        border-color: #503630;
+        cursor: pointer;
+        margin:2%;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-custom:hover, .btn-custom:active, .btn-custom:after {
+         background-color: #503630;
+         border: none;
+    }
+
+  
+
+</style>
+
+
+@if (LoggedInUser.Details is not null)
+{
+    <div class="col text-center" style="margin-left: 33%; margin-right: 33%">
+        <div class="row text-center">
+            <h1 class="display-5 font-raleway " style="font-weight:bold; margin-top: 10%; margin-bottom:4%; color:#503630; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5)">Izračunaj svoj BMI</h1>
+        </div>
+        <div class="row text-center">
+            <table class="table rounded">
+                <tbody>
+                    <tr>
+                        <td style="font-weight:bold; padding-left: 10%;">Ime:</td>
+                        <td>@LoggedInUser.Details.Name</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:bold; padding-left: 10%;">Prezime:</td>
+                        <td>@LoggedInUser.Details.LastName</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:bold; padding-left: 10%;">Trenutna visina:</td>
+                        <td>@LoggedInUser.Details.Height cm</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:bold; padding-left: 10%;">Trenutna težina:</td>
+                        <td>@LoggedInUser.Details.Weight kg</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:bold; padding-left: 10%;">Godine:</td>
+                        <td>@LoggedInUser.Details.Years</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight:bold; padding-left: 10%;">Spol:</td>
+                        <td>@LoggedInUser.Details.Sex</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="row text-center" style="margin-left:20%; margin-right:20%">
+            <EditForm Model="userDetails" OnValidSubmit="SaveUserDetails" FormName="DetailsForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="form-group">
+                    <label for="height">Visina:</label>
+                    <InputNumber id="height" class="form-control" @bind-Value="userDetails.Height" />
+                </div>
+                <div class="form-group">
+                    <label for="weight">Težina:</label>
+                    <InputNumber id="weight" class="form-control" @bind-Value="userDetails.Weight" />
+                </div>
+                <div class="form-group" style="margin-bottom: 20px">
+                    <label for="years">Godine:</label>
+                    <InputNumber id="years" class="form-control" @bind-Value="userDetails.Years" />
+                </div>
+                <button type="submit" class="btn btn-primary btn-custom">Izračunaj</button>
+
+
+            </EditForm>
+            <button type="submit" class="btn btn-primary btn-custom" @onclick="NavigateToCalculations">Prikaz postojećih podataka</button>
+
+        </div>
+    </div>
+ }
+
+else{
+    <div style="margin-left: 16%; margin-right:16%">
+        <EditForm Model="userDetails" OnValidSubmit="SaveUserDetails" FormName="DetailsForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="name">Ime:</label>
+                <InputText id="name" class="form-control" @bind-Value="userDetails.Name" />
+            </div>
+            <div class="form-group">
+                <label for="lastName">Prezime:</label>
+                <InputText id="lastName" class="form-control" @bind-Value="userDetails.LastName" />
+            </div>
+            <div class="form-group">
+                <label for="height">Visina:</label>
+                <InputNumber id="height" class="form-control" @bind-Value="userDetails.Height" />
+            </div>
+            <div class="form-group">
+                <label for="weight">Težina:</label>
+                <InputNumber id="weight" class="form-control" @bind-Value="userDetails.Weight" />
+            </div>
+            <div class="form-group">
+                <label for="years">Godine:</label>
+                <InputNumber id="years" class="form-control" @bind-Value="userDetails.Years" />
+            </div>
+            <div class="form-group" style="margin-bottom: 20px">
+                <label for="sex">Spol:</label>
+                <InputRadioGroup @bind-Value="@userDetails.Sex">
+                    <label><InputRadio Value="Gender.Muško.ToString()" />M</label>
+                    <label><InputRadio Value="Gender.Žensko.ToString()" />Ž</label>
+                </InputRadioGroup>
+            </div>
+
+
+            <button type="submit" class="btn btn-primary btn-custom">Izračunaj</button>
+        </EditForm>
+    </div>
+}
+
+
+
+
+@code {
+    [Inject] private NavigationManager NavManager { get; set; }
+    [Inject] private LoggedInUserModel LoggedInUser { get; set; }
+    [Inject] private UserDetailsService UserDetailsService { get; set; }
+
+
+    [SupplyParameterFromForm] private UserDetailsModel userDetails { get; set; } = new();
+
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            LoggedInUser.Details = UserDetailsService.GetUserDetails(LoggedInUser.Id);
+
+
+            firstRender = false;
+            StateHasChanged();
+        }
+
+        base.OnAfterRender(firstRender);
+    }
+
+    private void SaveUserDetails()
+    {
+        if (LoggedInUser.Details is not null)
+        {
+            userDetails.Name = LoggedInUser.Details.Name;
+            userDetails.LastName = LoggedInUser.Details.LastName;
+            userDetails.Sex = LoggedInUser.Details.Sex;
+
+            UserDetailsService.UpdateUserDetails(LoggedInUser.Id, userDetails);
+        }
+        else
+        {
+            UserDetailsService.AddUserDetails(LoggedInUser.Id, userDetails);
+            LoggedInUser.Details = new UserDetailsModel();
+        }
+
+        LoggedInUser.Details.Name = userDetails.Name;
+        LoggedInUser.Details.LastName = userDetails.LastName;
+        LoggedInUser.Details.Height = userDetails.Height;
+        LoggedInUser.Details.Weight = userDetails.Weight;
+        LoggedInUser.Details.Years = userDetails.Years;
+        LoggedInUser.Details.Sex = userDetails.Sex;
+
+        NavManager.NavigateTo("/calculations");
+    }
+
+    private void NavigateToCalculations()
+    {
+        NavManager.NavigateTo("/calculations");
+    }
+}

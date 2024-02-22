@@ -1,0 +1,66 @@
+﻿@rendermode InteractiveServer
+
+@using Nutrition.Models
+
+<style>
+    .btn-custom {
+        color: #ffff;
+        background-color: #CF4F59;
+        border-color: #503630;
+        margin-top: 20px;
+        margin-bottom: 33px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-custom:hover, .btn-custom:active, .btn-custom:after {
+            background-color: #503630;
+            border: none;
+        }
+
+</style>
+
+<div class="accordion-header mb-5" style="background-color:#E8828E; margin-left:0.5%; margin-right:0.5%;">
+    <div class="row">
+        <div class="col text-center">
+            <img src="Images/runningWoman.png" alt="BMI Image" style="width: 10%; height: auto; margin-right: 10px;">
+            <h1 class="display-1 font-raleway" style="font-weight:bold; color:#503630; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); display: inline-block; vertical-align: middle;">BMI Kalkulator</h1>
+        </div>
+    </div>
+    
+
+    <div style="position: absolute; top: 0.5cm; right: 0.5cm;">
+        @if (CurrentPage != NavManager.BaseUri && CurrentPage != NavManager.BaseUri + "#")
+        {
+            <button class="btn btn-primary btn-custom" @onclick="Logout">Odjava</button>
+        }
+    </div>
+</div>
+
+
+@code {
+    [Inject] private NavigationManager NavManager { get; set; }
+    [Inject] private LoggedInUserModel LoggedInUser { get; set; }
+
+    private string CurrentPage { get; set; }
+
+    protected override void OnInitialized()
+    {
+        CurrentPage = NavManager.Uri;
+        NavManager.LocationChanged += HandleLocationChanged;
+    }
+    private void HandleLocationChanged(object sender, LocationChangedEventArgs e)
+    {
+        CurrentPage = e.Location;
+        StateHasChanged();
+    }
+   
+
+    private void Logout()
+    {
+        LoggedInUser.Reset();
+        NavManager.NavigateTo("/");
+    }
+
+
+}
